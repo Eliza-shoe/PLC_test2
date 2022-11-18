@@ -58,11 +58,11 @@ Addition
 Division
 Subtraction
 
-<S> --> S - S
-<S> --> S / S
-<S> --> S + S
-<S> --> S * S
-<S> --> digit
-<S> --> (S)
+S --> S - S
+S --> S / S
+S --> S + S
+S --> S * S
+S --> digit
+S --> (S)
 
 
