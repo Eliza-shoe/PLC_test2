@@ -59,10 +59,15 @@ Division
 Subtraction
 
 S --> S - S
+\n
 S --> S / S
+\n
 S --> S + S
+\n
 S --> S * S
+\n
 S --> digit
+\n
 S --> (S)
 
 
