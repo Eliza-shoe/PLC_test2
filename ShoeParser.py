@@ -1,141 +1,130 @@
-from os import curdir
-from ShoeLexer import *
-from ToLinkedList import *
+import re
 
 
-class ShoeParser:
-    def __init__(self, variables={}):
-        self.variables = variables
+class ShoeFileManager:
+    def __init__(self, filepath):
+        self.filepath = filepath
 
-    def to_linked_list(self, lexemes, tokens):
-        linked_nodes = LinkedLexer.link()
-        return linked_nodes
+    def get_word_matrix(self):
+        word_matrix = []
 
-    def parse(self):
-        linked_nodes = self.to_linked_list()
-        variables = {}
-        for i in range(len(linked_nodes)):
-            cur = linked_nodes[i]
-            cur = linked_nodes[i].token
-            self.initial(cur)
+        lines = []
+        with open(self.filepath, "r") as f:
+            contents = f.read()
 
-    def initial(self, cur):
-        self.start(cur)
-        self.end(cur)
+        lines = contents.split(";")
 
-    def start(self, cur):
-        if current.token == 29:
-            current = cur.next
-            self.stmt()
-        else:
-            print("Syntax Error: File must begin with 'start' ")
+        for i in range(len(lines)):
+            word_list = []
+            words = lines[i].split(" ")
+            words = [item.strip() for item in words]
+            words = [j for j in words if j]
+            word_matrix.append(words)
 
-    def stmt(self, cur):
-        self.stmt_type()
+        return word_matrix
 
-    def stmt_type(self, cur):
-        if cur.token in range(6, 10):
-            current = current.next
-            self.as_stmt()
-        elif cur.token == 5:
-            current = current.next
-            self.shoelace()
-        elif cur.token == 3:
-            current = current.next
-            self.fits(cur)
-        elif cur.token == 2 or cur.token == 18:
-            current = current.next
-            self.expr(cur)
 
-    def as_stmt(self, cur):
-        what_type = self.int_type(cur)
-        cur = cur.next
-        what_name = self.var_name(cur)
-        if cur.next.token == 12:
-            cur = cur.next.next
-        else:
-            print("SyntaxError: invalid assignment")
-            quit
-        what_value = self.expr(cur)
-        self.variables[what_name] = [what_type, what_value]
+class ShoeTokenizer:
+    def __init__(self, word_matrix):
+        self.word_matrix = word_matrix
 
-    def int_type(self, cur):
-        if cur.token == 6:
-            return "sandal"
-        if cur.token == 7:
-            return "loafer"
-        if cur.token == 8:
-            return "cowboy"
-        if cur.token == 9:
-            return "wellington"
+    def define_tokens(self):
+        """Defines tokens"""
+        variable = re.compile("^[A-Za-z_]{5,7}")
+        special_words = re.compile(
+            "fits|wearit|shoelace|sandal|loafer|cowboy|wellington|start|end"
+        )
+        charmap = {
+            # variables 1, digits 2
+            "variable": 1,
+            "digit": 2,
+            "fits": 3,  # if
+            "shoelace": 5,  # loop
+            "sandal": 6,  # 1 byte int
+            "loafer": 7,  # 2 byte int
+            "cowboy": 8,  # 4 byte int
+            "wellington": 9,  # 8 byte int
+            "{": 10,  # right curly brace, used for differentiation
+            "}": 11,  # left curly brace, used for differentiation
+            "=": 12,  # variable declaration | equals
+            "+": 13,  # addition
+            "-": 14,  # subtraction
+            "*": 15,  # multiplication
+            "/": 16,  # division
+            "%": 17,  # modulo
+            "(": 18,  # right parenthesis, for precedence setting
+            ")": 19,  # left parenthesis, for precedence setting
+            "<": 20,  # less than
+            ">": 21,  # greater than
+            "<=": 22,  # less than or equal to
+            ">=": 23,  # greater than or equal to
+            "==": 24,  # is equal to
+            "!=": 25,  # is not equal to
+            "'": 26,  # quotation
+            ";": 28,  # semicolon, used to denote end of like
+            "start": 29,
+            "end": 30,
+            "illegal": 99,
+        }
+        return variable, special_words, charmap
 
-    def var_name(self, cur):
-        if re.match("^[A-Za-z_]{5,7}", cur.lexeme):
-            return cur.lexeme
-        else:
-            print("syntactic error! Variable name invalid")
-            quit
+    def tokenize(self):
+        """Input is contents of given text file,
+        output is list of integers encoding tokens"""
+        variable, special_words, charmap = self.define_tokens()
+        token_list = []
+        lexemes = []
+        lex_count = []
+        lines = []
 
-    def expr(self, cur):
-        """
-        POMADS precedence ( O = Modulo)
-        <expr> -> <var>
-        <expr> -> ( <var> )
-        <expr> -> <var> * <var>
-        <expr> -> <var> + <var>
-        <expr> -> <var> \ <var>
-        <expr> -> <var> - <var>
-        """
-        value = 0
-        variable_flag = 0
-        if cur.token == 1:
-            value = self.variables[cur.lexeme][1]
-        if cur.token == 2:
-            value = int(cur.lexeme)
-        if cur.next == None:
-            value = int(cur.lexeme)
-        elif cur.token == 19:
-            return
-        elif cur.token == 18:
-            cur = cur.next
-            self.expr(cur)
-        elif cur.next.token == 17:
-            if cur.next.next.token == 2:
-                value %= int(cur.next.next.lexeme)
-        elif cur.next.token == 15:
-            if cur.next.next.token == 2:
-                value *= int(cur.next.next.lexeme)
-        elif cur.next.token == 13:
-            if cur.next.next.token == 2:
-                value += int(cur.next.next.lexeme)
-        elif cur.next.token == 16:
-            if cur.next.next.token == 2:
-                value /= int(cur.next.next.lexeme)
-        elif cur.next.token == 14:
-            if cur.next.next.token == 2:
-                value -= int(cur.next.next.lexeme)
-        else:
-            print("syntactic error! Expression invalid")
-            quit
-        return value
+        for line in self.word_matrix:
+            cur_count = 0
+            cur_tokens = []
+            cur_lexemes = []
+            for word in line:
 
-    def fits(self, cur):
-        cur = cur.next
-        if cur.token != 18:
-            print(
-                "Syntax Error! Boolean statements in a fits statement should be enclosed in parantheses"
-            )
-            quit
-        else:
-            cur = cur.next
-            boo = self.bool_expr()
-            if boo == True & cur.next.token == 19 & cur.next.next.token == 10:
-                cur = cur.next.next
-                self.block_expr()
+                if re.match(special_words, word):  # check if lexeme is special word
+                    cur_tokens.append(charmap[word])
+                    cur_count += 1
+                    cur_lexemes.append(word)
 
-    def bool_expr(self, cur):
+                elif re.match(variable, word):  # check if lexeme could be varaible
+                    cur_tokens.append(charmap["variable"])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+
+                elif word.isnumeric():
+                    cur_tokens.append(charmap["digit"])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+
+                elif word in charmap.keys():
+                    cur_tokens.append(charmap[word])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+                else:
+                    token_list.append(charmap["illegal"])
+                    print("Lexical Error: invalid symbol detected")
+                    print(f"Symbol is {word}")
+                    return 1, token_list, lexemes, lex_count
+            token_list.append(cur_tokens)
+            lexemes.append(cur_lexemes)
+            lex_count.append(cur_count)
+
+        return token_list, lexemes, lex_count
+
+
+class ShoeSyntaxAnalyzer:
+    def __init__(self, tokens, lexemes):
+        self.tokens = tokens
+        self.lexemes = lexemes
+
+    def syntax_analyzer(self):
         pass
 
-    def block_expr(self, cur):
-        cur = cur.next
-        self.expr()
+
+my_file = ShoeFileManager("test.txt")
+word_matrix = my_file.get_word_matrix()
+print(word_matrix)
+Tokenizer = ShoeTokenizer(word_matrix)
+tokens, lexemes, lex_count = Tokenizer.tokenize()
