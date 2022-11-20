@@ -1,72 +1,44 @@
 import re
 
-# Eliza Schuh
-# PLC Exam 2
-# This language, in honor of my last name, shall be shoe-based.
 
-
-class ShoeNode:
-    """I'm essentially writing my lexer like a linked list"""
-
-    def __init__(self, data):
-        self.data = data
-        self.next = None
-
-
-class ShoeFile:
+class ShoeFileManager:
     def __init__(self, filepath):
-        # constructor
         self.filepath = filepath
-        self.words = 0
 
-    def read_file_to_words(self):
-        """Should take in txt file and count lexemes"""
-        word_list = []
+    def get_word_matrix(self):
+        word_matrix = []
+
+        lines = []
         with open(self.filepath, "r") as f:
             contents = f.read()
-        words = contents.split(" ")
-        words = [i for i in words if i]  # remove empty strings
-        special_char = re.compile("[@_!#$%^&*()<>?/\|};{~:.]")
 
-        for word in words:
+        lines = contents.split(";")
 
-            if special_char.search(word) != None:
+        for i in range(len(lines)):
+            word_list = []
+            words = lines[i].split(" ")
+            words = [item.strip() for item in words]
+            words = [j for j in words if j]
+            word_matrix.append(words)
 
-                splitsies = special_char.split(word)
-
-                splitsies = [j for j in splitsies if j]
-
-                for spl in splitsies:
-                    word_list.append(spl)
-
-                specials = re.findall(special_char, word)
-
-                for s in specials:
-                    word_list.append(s)
-
-            else:
-                word_list.append(word)
-        word_list = [item.strip() for item in word_list]
-        word_list = [i for i in word_list if i]
-        return word_list
+        return word_matrix
 
 
-class ShoeLexer:
-    def __init__(self, word_list):
-        self.word_list = word_list
+class ShoeTokenizer:
+    def __init__(self, word_matrix):
+        self.word_matrix = word_matrix
 
     def define_tokens(self):
         """Defines tokens"""
-        variable = re.compile("^[A-Z|a-z][A-Z|a-z|_]{5,7}")
+        variable = re.compile("^[A-Za-z_]{5,7}")
         special_words = re.compile(
-            "fits\?|wearit\?|shoelace|sandal|loafer|cowboy|wellington"
+            "fits|wearit|shoelace|sandal|loafer|cowboy|wellington|start|end"
         )
         charmap = {
             # variables 1, digits 2
             "variable": 1,
             "digit": 2,
-            "fits?": 3,  # if
-            "wearit?": 4,  # else
+            "fits": 3,  # if
             "shoelace": 5,  # loop
             "sandal": 6,  # 1 byte int
             "loafer": 7,  # 2 byte int
@@ -90,6 +62,8 @@ class ShoeLexer:
             "!=": 25,  # is not equal to
             "'": 26,  # quotation
             ";": 28,  # semicolon, used to denote end of like
+            "start": 29,
+            "end": 30,
             "illegal": 99,
         }
         return variable, special_words, charmap
@@ -97,43 +71,60 @@ class ShoeLexer:
     def tokenize(self):
         """Input is contents of given text file,
         output is list of integers encoding tokens"""
-        variable, digit, special_words, charmap = self.define_tokens()
+        variable, special_words, charmap = self.define_tokens()
         token_list = []
         lexemes = []
-        lex_count = 0
+        lex_count = []
+        lines = []
 
-        for word in self.word_list:
-            if re.match(special_words, word):  # check if lexeme is special word
-                token_list.append(charmap[word])
-                lex_count += 1
-                lexemes.append(word)
+        for line in self.word_matrix:
+            cur_count = 0
+            cur_tokens = []
+            cur_lexemes = []
+            for word in line:
 
-            elif re.match(variable, word):  # check if lexeme could be varaible
-                token_list.append(charmap["variable"])
-                lex_count += 1
-                lexemes.append(word)
+                if re.match(special_words, word):  # check if lexeme is special word
+                    cur_tokens.append(charmap[word])
+                    cur_count += 1
+                    cur_lexemes.append(word)
 
-            elif word.isnumeric():
-                token_list.append(charmap["digit"])
-                lex_count += 1
-                lexemes.append(word)
-            elif word in charmap.keys():
-                token_list.append(charmap[word])
-                lex_count += 1
-                lexemes.append(word)
-            else:
-                token_list.append(charmap["illegal"])
-                print("Lexical Error: invalid symbol detected")
-                quit
+                elif re.match(variable, word):  # check if lexeme could be varaible
+                    cur_tokens.append(charmap["variable"])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+
+                elif word.isnumeric():
+                    cur_tokens.append(charmap["digit"])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+
+                elif word in charmap.keys():
+                    cur_tokens.append(charmap[word])
+                    cur_count += 1
+                    cur_lexemes.append(word)
+                else:
+                    token_list.append(charmap["illegal"])
+                    print("Lexical Error: invalid symbol detected")
+                    print(f"Symbol is {word}")
+                    return 1, token_list, lexemes, lex_count
+            token_list.append(cur_tokens)
+            lexemes.append(cur_lexemes)
+            lex_count.append(cur_count)
 
         return token_list, lexemes, lex_count
 
-    def check_syntax():
-        return
+
+class ShoeSyntaxAnalyzer:
+    def __init__(self, tokens, lexemes):
+        self.tokens = tokens
+        self.lexemes = lexemes
+
+    def syntax_analyzer(self):
+        pass
 
 
-my_file = ShoeFile("test.txt")
-word_list = my_file.read_file_to_words()
-print(word_list)
-Lexer = ShoeLexer(word_list)
-print(Lexer.tokenize())
+my_file = ShoeFileManager("test.txt")
+word_matrix = my_file.get_word_matrix()
+print(word_matrix)
+Tokenizer = ShoeTokenizer(word_matrix)
+tokens, lexemes, lex_count = Tokenizer.tokenize()
