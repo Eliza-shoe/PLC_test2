@@ -1,1 +1,7 @@
-sandal HiWorld = 1;
+
+start;
+sandal HiWorld;
+loafer Eliza;
+Eliza = HiWorld + 2;
+shoelace ( Eliza <= 10 ) { Eliza = Eliza + 2 } ;
+end;
