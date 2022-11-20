@@ -1,0 +1,9 @@
+start; 
+sandal elizaS; 
+wellington  eSchuh;
+wellington cUmoja;
+elizaS = 1;
+eSchuh = 1000;
+cUmoja = elizaS + eSchuh;
+fits (cUmoja > 1) {eSchuh = eSchuh + 1; } ;
+end;

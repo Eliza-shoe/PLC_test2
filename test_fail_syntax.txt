@@ -1,0 +1,8 @@
+
+sandal HiWorld;
+loafer Eliza;
+Eliza = HiWorld + 2;
+shoelace ( Eliza <= HiWorld ) { Eliza = Eliza + 2 } ;
+HiWorld = fits ( 1 < 2) { 3 };
+1 + 1 
+
