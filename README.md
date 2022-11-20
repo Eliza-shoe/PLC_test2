@@ -1,3 +1,4 @@
+
 # PLC_test2
 ## This language, in honor of my last name, shall be shoe-based.
 
@@ -64,5 +65,54 @@ S --> S + S\
 S --> S * S\
 S --> digit\
 S --> (S)\
+
+## Rules
+
+### Lexical: 
+Variable names must follow the pattern: ^[A-Z|a-z][A-Z|a-z|_]{5,7}
+Digits must follow patten: [0-9]*
+
+#### Syntactic 
+<start> -> start; <stmt> end;/
+<stmt> -> <stmt_type>/
+<stmt_type> -> <as_stmt> ;/
+<stmt_type> -> <block_stmt> ;/
+<as_stmt> -> <type> <var_name> = <expr>/
+<type> -> sandal/
+<type> -> loafer/
+<type> -> cowboy/
+<type> -> wellington/
+<var> -> int_lit/
+<expr> -> <var>/
+<expr> -> <var> * <var>/
+<expr> -> <var> + <var>/
+<expr> -> <var> \ <var>/
+<expr> -> <var> - <var>/
+<var_name> -> char var_char var_char var_char var_char/
+<var_name> -> char var_char var_char var_char var_char var_char/
+<var_name> -> char var_char var_char var_char var_char var_char/
+
+var_char -> _/
+var_char -> char/
+
+char -> cap_char/
+char -> lower_char/
+
+cap_char -> A/
+
+lower_char -> a/
+
+int_lit-> 0/
+int_lit-> 1/
+int_lit-> 2/
+int_lit-> 3/
+int_lit-> 4/
+int_lit-> 5/
+int_lit-> 6/
+int_lit-> 7/
+int_lit-> 8/
+int_lit-> 9/
+
+<block_stmt> -> { <stmt> }/
 
 
